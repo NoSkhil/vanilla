@@ -60,12 +60,10 @@ async function updateTask(req, res, id) {
         } else {
             const body = await getPostData(req)
 
-            const { name, description, price } = JSON.parse(body)
+            const { description } = JSON.parse(body)
 
             const taskData = {
-                name: name || task.name,
                 description: description || task.description,
-                price: price || task.price
             }
 
             const updTask = await Task.update(id, taskData)
