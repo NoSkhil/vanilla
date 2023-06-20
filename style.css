@@ -66,4 +66,25 @@ body {
   li .actions i:hover {
     color: #ff5252;
   }
+
+  .edit-input {
+    flex: 1;
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .actions i:nth-child(3),
+  .actions i:nth-child(4) {
+    display: none;
+    cursor: pointer;
+    color: #999;
+    padding: 5px;
+  }
+  
+  .actions i:nth-child(3):hover,
+  .actions i:nth-child(4):hover {
+    color: #ff5252;
+  }
   

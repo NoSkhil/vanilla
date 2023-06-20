@@ -32,7 +32,6 @@ async function getTask(req, res, id) {
 async function createTask(req, res) {
     try {
         const body = await getPostData(req)
-        console.log("body: ", body);
         const { description } = JSON.parse(body)
 
         const task = {

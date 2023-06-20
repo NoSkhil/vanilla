@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="http://localhost:8000/stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <script>
-    function createTaskItem({todoList, description, id}) {
+    function createTaskItem({ todoList, description, id }) {
       const listItem = document.createElement('li');
       listItem.id = id;
 
@@ -17,44 +17,59 @@
       taskSpan.className = 'task';
       taskSpan.textContent = description;
 
+      const editInput = document.createElement('input');
+      editInput.className = 'edit-input';
+      editInput.type = 'text';
+      editInput.style.display = 'none';
 
       const actionsSpan = document.createElement('span');
       actionsSpan.className = 'actions';
 
       const editIcon = document.createElement('i');
       editIcon.className = 'fas fa-edit';
+      editIcon.addEventListener('click', () => editTask(id));
 
       const deleteIcon = document.createElement('i');
       deleteIcon.className = 'fas fa-trash';
-      deleteIcon.addEventListener('click', () => deleteTask(id)); 
+      deleteIcon.addEventListener('click', () => deleteTask(id));
+
+      const cancelIcon = document.createElement('i');
+      cancelIcon.className = 'fas fa-times';
+      cancelIcon.style.display = 'none';
+
+      const saveIcon = document.createElement('i');
+      saveIcon.className = 'fas fa-check';
+      saveIcon.style.display = 'none';
 
       actionsSpan.appendChild(editIcon);
       actionsSpan.appendChild(deleteIcon);
+      actionsSpan.appendChild(cancelIcon);
+      actionsSpan.appendChild(saveIcon);
 
       taskWrapper.appendChild(taskSpan);
       taskWrapper.appendChild(actionsSpan);
+      taskWrapper.appendChild(editInput);
 
       listItem.appendChild(taskWrapper);
       todoList.appendChild(listItem);
     }
 
     function fetchTaskList() {
-    fetch('http://localhost:8000/api/tasks')
-      .then(response => {
-        response.json().then(body => {
-          const todoList = document.getElementById('todo-list');
-          console.log(body)
-          todoList.innerHTML = '';
-          body.forEach(task => {
-          createTaskItem({todoList, description: task.description, id: task.id});
-    });
+      fetch('http://localhost:8000/api/tasks')
+        .then(response => {
+          response.json().then(body => {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+            body.forEach(task => {
+              createTaskItem({ todoList, description: task.description, id: task.id });
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Error:', error);
         });
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-  fetchTaskList();
+    }
+    fetchTaskList();
   </script>
 </head>
 
@@ -80,56 +95,113 @@
   </div>
 
   <script>
-    
-  document.getElementById('todo-form').addEventListener('submit', function(event) {
-  event.preventDefault(); // Prevent the default form submission
-  
-  const input = document.getElementById('todo-input');
-  const description = input.value.trim();
-  
-  if (description) {
-    const task = { description };
-  
-    fetch('http://localhost:8000/api/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(task)
-    })
-      .then(response => response.json())
-      .then(data => {
-      const todoList = document.getElementById('todo-list');
-      console.log('Task created:', data);
-  
-      input.value = '';
-      createTaskItem({todoList, description: data.description, id: data.id});
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-  });
 
-  function deleteTask(taskId) {
-  fetch(`http://localhost:8000/api/tasks/${taskId}`, {
-    method: 'DELETE',
-  })
-    .then(response => {
-      if (response.ok) {
-        const todoList = document.getElementById('todo-list');
-        const taskItem = document.getElementById(`${taskId}`);
-        if (taskItem) {
-          todoList.removeChild(taskItem);
-        }
-      } else {
-        console.error('Failed to delete task');
+    document.getElementById('todo-form').addEventListener('submit', function (event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      const input = document.getElementById('todo-input');
+      const description = input.value.trim();
+
+      if (description) {
+        const task = { description };
+
+        fetch('http://localhost:8000/api/tasks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(task)
+        })
+          .then(response => response.json())
+          .then(data => {
+            const todoList = document.getElementById('todo-list');
+
+            input.value = '';
+            createTaskItem({ todoList, description: data.description, id: data.id });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
       }
-    })
-    .catch(error => {
-      console.error('Error:', error);
     });
-}
+
+    function deleteTask(taskId) {
+      fetch(`http://localhost:8000/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      })
+        .then(response => {
+          if (response.ok) {
+            const todoList = document.getElementById('todo-list');
+            const taskItem = document.getElementById(`${taskId}`);
+            if (taskItem) {
+              todoList.removeChild(taskItem);
+            }
+          } else {
+            console.error('Failed to delete task');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+
+    function editTask(taskId) {
+      let taskSpan = document.getElementById(`${taskId}`).querySelector('.task');
+      let editInput = document.getElementById(`${taskId}`).querySelector('.edit-input');
+      let editIcon = document.getElementById(`${taskId}`).querySelector('.fa-edit');
+      let deleteIcon = document.getElementById(`${taskId}`).querySelector('.fa-trash');
+      let cancelIcon = document.getElementById(`${taskId}`).querySelector('.fa-times');
+      let saveIcon = document.getElementById(`${taskId}`).querySelector('.fa-check');
+
+      editInput.value = taskSpan.textContent;
+      taskSpan.style.display = 'none';
+      editInput.style.display = 'inline-block';
+      editIcon.style.display = 'none';
+      deleteIcon.style.display = 'none';
+      cancelIcon.style.display = 'inline';
+      saveIcon.style.display = 'inline';
+
+      // Event listener for cancel icon
+      cancelIcon.addEventListener('click', () => {
+        taskSpan.style.display = 'inline-block';
+        editInput.style.display = 'none';
+        editIcon.style.display = 'inline';
+        deleteIcon.style.display = 'inline';
+        cancelIcon.style.display = 'none';
+        saveIcon.style.display = 'none';
+      });
+
+      // Event listener for save icon
+      saveIcon.addEventListener('click', () => {
+        const newDescription = editInput.value.trim();
+
+        if (newDescription) {
+          taskSpan.textContent = newDescription;
+          taskSpan.style.display = 'inline-block';
+          editInput.style.display = 'none';
+          editIcon.style.display = 'inline';
+          deleteIcon.style.display = 'inline';
+          cancelIcon.style.display = 'none';
+          saveIcon.style.display = 'none';
+
+          // Make a PUT request to update the task description
+          fetch(`http://localhost:8000/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: newDescription }),
+          })
+            .then(response => response.json())
+            .then(data => {
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+        }
+      });
+    }
+
   </script>
 </body>
 
