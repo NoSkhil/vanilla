@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>To-Do List</title>
+  <link rel="stylesheet" type="text/css" href="http://localhost:8000/stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <script>
+    function createTaskItem({todoList, description, id}) {
+      const listItem = document.createElement('li');
+      listItem.id = id;
+
+      const taskWrapper = document.createElement('div');
+      taskWrapper.className = 'task-wrapper';
+
+      const taskSpan = document.createElement('span');
+      taskSpan.className = 'task';
+      taskSpan.textContent = description;
+
+
+      const actionsSpan = document.createElement('span');
+      actionsSpan.className = 'actions';
+
+      const editIcon = document.createElement('i');
+      editIcon.className = 'fas fa-edit';
+
+      const deleteIcon = document.createElement('i');
+      deleteIcon.className = 'fas fa-trash';
+      deleteIcon.addEventListener('click', () => deleteTask(id)); 
+
+      actionsSpan.appendChild(editIcon);
+      actionsSpan.appendChild(deleteIcon);
+
+      taskWrapper.appendChild(taskSpan);
+      taskWrapper.appendChild(actionsSpan);
+
+      listItem.appendChild(taskWrapper);
+      todoList.appendChild(listItem);
+    }
+
+    function fetchTaskList() {
+    fetch('http://localhost:8000/api/tasks')
+      .then(response => {
+        response.json().then(body => {
+          const todoList = document.getElementById('todo-list');
+          console.log(body)
+          todoList.innerHTML = '';
+          body.forEach(task => {
+          createTaskItem({todoList, description: task.description, id: task.id});
+    });
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+  fetchTaskList();
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h1>To-Do List</h1>
+    <form id="todo-form">
+      <input type="text" name="task" id="todo-input" placeholder="Add a new task">
+      <button type="submit">Add</button>
+    </form>
+    <ul id="todo-list">
+      <!-- To-do items will be dynamically added here -->
+      <li>
+        <div class="task-wrapper">
+          <span class="task">Sample Task</span>
+          <span class="actions">
+            <i class="fas fa-edit"></i>
+            <i class="fas fa-trash"></i>
+          </span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    
+  document.getElementById('todo-form').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent the default form submission
+  
+  const input = document.getElementById('todo-input');
+  const description = input.value.trim();
+  
+  if (description) {
+    const task = { description };
+  
+    fetch('http://localhost:8000/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(task)
+    })
+      .then(response => response.json())
+      .then(data => {
+      const todoList = document.getElementById('todo-list');
+      console.log('Task created:', data);
+  
+      input.value = '';
+      createTaskItem({todoList, description: data.description, id: data.id});
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+  });
+
+  function deleteTask(taskId) {
+  fetch(`http://localhost:8000/api/tasks/${taskId}`, {
+    method: 'DELETE',
+  })
+    .then(response => {
+      if (response.ok) {
+        const todoList = document.getElementById('todo-list');
+        const taskItem = document.getElementById(`${taskId}`);
+        if (taskItem) {
+          todoList.removeChild(taskItem);
+        }
+      } else {
+        console.error('Failed to delete task');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+}
+  </script>
+</body>
+
+</html>
